@@ -19,6 +19,7 @@ import (
 )
 
 func main() {
+	//creates context that listens to signals for program to be terminated
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer cancel()
 
@@ -38,9 +39,10 @@ func main() {
 	}
 
 	go func() {
+		//request gets cancelled
 		<-ctx.Done()
 		fmt.Println("shuttign down...")
-
+		//emits a timeout signal through the context
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
 
@@ -56,6 +58,7 @@ func main() {
 	}
 }
 
+// function appends other items into a new list that does not need to be removed
 func removeItem(id string, todos []Todo) []Todo {
 	newList := []Todo{}
 	for _, v := range todos {
@@ -65,13 +68,14 @@ func removeItem(id string, todos []Todo) []Todo {
 	}
 	return newList
 }
+
 func deleteTodo(ctx *gin.Context) {
-	var todo DeleteTodo
+	var todo Todo
 	if err := ctx.BindJSON(&todo); err != nil {
 		return
 	}
 	todos := readJsonFile()
-
+	//rewrites items that should not be deleted
 	newTodo := removeItem(todo.ID, todos)
 	file, _ := json.MarshalIndent(newTodo, "", " ")
 	_ = os.WriteFile("todos.json", file, 0644)
@@ -82,28 +86,26 @@ func getTodo(ctx *gin.Context) {
 	todos := readJsonFile()
 	ctx.HTML(http.StatusOK, "todos.html", todos)
 }
+
 func addTodo(ctx *gin.Context) {
 	var newTodo Todo
 	if err := ctx.BindJSON(&newTodo); err != nil {
 		return
 	}
-
 	writeJsonFile(newTodo)
 	getTodo(ctx)
 }
 
 func readJsonFile() []Todo {
+	//opends a file and creates a new one if it does not exist
 	file, err := os.OpenFile("todos.json", os.O_CREATE, os.ModePerm)
 	if err != nil {
 		log.Println(err)
 	}
 	defer file.Close()
-
 	byteValue, _ := io.ReadAll(file)
-
 	var todos []Todo
 	json.Unmarshal(byteValue, &todos)
-
 	return todos
 }
 
@@ -117,15 +119,7 @@ func writeJsonFile(todo Todo) {
 }
 
 type Todo struct {
-	ID    string
-	Title string
-	Done  bool
+	ID    string `json:"id"`
+	Title string `json:"title"`
+	Done  bool   `json:"done"`
 }
-type DeleteTodo struct {
-	ID string `form:"id"`
-}
-
-// var todos = []Todo{
-// 	{1, "Learn Go", false},
-// 	{2, "Build a Todo App", false},
-// }
