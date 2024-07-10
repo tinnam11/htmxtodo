@@ -1,10 +1,10 @@
 <!-- In todos.html -->
 {{range .}}
 <div>
-    <form hx-delete="/todos" hx-target="#todo-list">
-        <span>{{.Title}}</span>
-        <input type="hidden" name="id" value="{{.ID}}">
-        <button type="submit">x</button>
-    </form>
+  <form hx-delete="/todos" hx-ext="json-enc" hx-target="#todo-list">
+    <span>{{.Title}}</span>
+    <input type="hidden" name="id" value="{{.ID}}" />
+    <button type="submit">x</button>
+  </form>
 </div>
 {{end}}
